@@ -87,9 +87,19 @@ get_latest_version() {
 }
 
 # Function to compare versions
+# Returns 0 (success) only if $1 is strictly greater than $2
 version_gt() {
-    # Returns 0 if $1 > $2, 1 otherwise
-    printf '%s\n%s\n' "$2" "$1" | sort -V -C
+    local v1="$1"
+    local v2="$2"
+    # If equal, not greater
+    if [[ "$v1" == "$v2" ]]; then
+        return 1
+    fi
+    # Ensure version-aware sort with stable locale
+    if [[ "$(printf '%s\n%s\n' "$v1" "$v2" | LC_ALL=C sort -V | tail -n1)" == "$v1" ]]; then
+        return 0
+    fi
+    return 1
 }
 
 # Function to backup current installation
