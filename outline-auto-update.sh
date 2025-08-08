@@ -181,13 +181,12 @@ update_outline() {
     # Change to outline directory
     cd "$OUTLINE_DIR"
     
-    # Set development environment for build
-    export NODE_ENV=development
-    sed -i 's/NODE_ENV=production/NODE_ENV=development/g' "$OUTLINE_DIR/.env"
-    
     # Install dependencies and build
-    log "Installing dependencies..."
-    if ! yarn install --frozen-lockfile; then
+    # Ensure production environment for install and build
+    export NODE_ENV=production
+
+    log "Installing dependencies (including devDependencies)..."
+    if ! yarn install --frozen-lockfile --production=false; then
         warning "Failed to install dependencies, attempting restore..."
         restore_backup "$backup_path"
         error_exit "Update failed during dependency installation"
@@ -201,9 +200,10 @@ update_outline() {
         error_exit "Update failed during build"
     fi
     
-    # Set back to production
-    sed -i 's/NODE_ENV=development/NODE_ENV=production/g' "$OUTLINE_DIR/.env"
-    export NODE_ENV=production
+    # If prior runs flipped .env to development, normalize it back to production
+    if grep -q '^NODE_ENV=development$' "$OUTLINE_DIR/.env"; then
+        sed -i 's/^NODE_ENV=development$/NODE_ENV=production/' "$OUTLINE_DIR/.env"
+    fi
     
     # Update version file
     echo "$new_version" > "$VERSION_FILE"
