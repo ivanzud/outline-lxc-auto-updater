@@ -181,15 +181,13 @@ update_outline() {
     # Change to outline directory
     cd "$OUTLINE_DIR"
     
-    # Install dependencies and build
-    # Ensure production environment for install and build
-    export NODE_ENV=production
     # Enable corepack for correct Yarn version
     log "Enabling corepack..."
     corepack enable
     
-    log "Installing dependencies (including devDependencies)..."
-    if ! yarn install --frozen-lockfile --production=false; then
+    # Install dependencies and build
+    log "Installing dependencies..."
+    if ! yarn install; then
         warning "Failed to install dependencies, attempting restore..."
         restore_backup "$backup_path"
         error_exit "Update failed during dependency installation"
@@ -203,14 +201,13 @@ update_outline() {
         error_exit "Update failed during build"
     fi
     
-    # If prior runs flipped .env to development, normalize it back to production
+    # Ensure production environment in .env
     if grep -q '^NODE_ENV=development$' "$OUTLINE_DIR/.env"; then
         sed -i 's/^NODE_ENV=development$/NODE_ENV=production/' "$OUTLINE_DIR/.env"
     fi
     
     # Update version file
-    echo "$new_version" > "$VERSION_FILE"
-    
+    echo "$new_version" > "$VERSION_FILE"    
     # Start service
     systemctl start "$SERVICE_NAME"
     
