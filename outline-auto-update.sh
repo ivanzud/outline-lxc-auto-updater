@@ -184,7 +184,10 @@ update_outline() {
     # Install dependencies and build
     # Ensure production environment for install and build
     export NODE_ENV=production
-
+    # Enable corepack for correct Yarn version
+    log "Enabling corepack..."
+    corepack enable
+    
     log "Installing dependencies (including devDependencies)..."
     if ! yarn install --frozen-lockfile --production=false; then
         warning "Failed to install dependencies, attempting restore..."

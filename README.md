@@ -30,6 +30,42 @@ The Outline installation script from community-scripts creates a working Outline
 
 ## Installation
 
+### Quick Install (no git)
+
+```bash
+# Run inside your Outline LXC as root
+cd /root \
+&& wget -O outline-auto-update.sh https://raw.githubusercontent.com/ivanzud/outline-lxc-auto-updater/main/outline-auto-update.sh \
+&& wget -O setup-auto-update.sh https://raw.githubusercontent.com/ivanzud/outline-lxc-auto-updater/main/setup-auto-update.sh \
+&& chmod +x outline-auto-update.sh setup-auto-update.sh \
+&& ./setup-auto-update.sh
+```
+
+### Install via Git (optional)
+
+```bash
+apt-get update && apt-get install -y git ca-certificates
+cd /root && rm -rf outline-lxc-auto-updater
+git clone https://github.com/ivanzud/outline-lxc-auto-updater.git
+cd outline-lxc-auto-updater && chmod +x outline-auto-update.sh setup-auto-update.sh
+./setup-auto-update.sh
+```
+
+### Upgrade/Reinstall the updater
+
+Re-run any of the install methods above. It will overwrite:
+
+- `/usr/local/bin/outline-auto-update`
+- `/etc/cron.d/outline-auto-update`
+- `/etc/logrotate.d/outline-update`
+
+### Verify
+
+```bash
+outline-auto-update --check || true   # exit code 1 means “Up to date”
+tail -n 50 /var/log/outline-update.log
+```
+
 ### 1. Download the Scripts
 
 ```bash
@@ -161,6 +197,18 @@ echo "Outline updated to $latest_version" | mail -s "Outline Update Success" adm
 - **Comprehensive Logging** - Every action is logged with timestamps
 
 ## Troubleshooting
+
+### Blank page after update
+
+If the web UI shows a blank/white page, rebuild assets in production (some environments require devDependencies during build):
+
+```bash
+cd /opt/outline
+export NODE_ENV=production
+yarn install --frozen-lockfile --production=false
+yarn build
+systemctl restart outline
+```
 
 ### Update Fails
 
